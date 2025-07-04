@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use Google\Client;
+use App\Models\Product;
+use App\Models\Category;
 use Google\Service\Drive;
+use Illuminate\Http\Request;
 use Google\Service\Drive\DriveFile;
 use Google\Service\Drive\Permission;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -65,5 +66,14 @@ class ProductController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function index() {
+        $data = Category::all();
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 }
