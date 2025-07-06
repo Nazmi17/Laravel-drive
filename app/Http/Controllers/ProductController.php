@@ -70,12 +70,22 @@ class ProductController extends Controller
         }
     }
 
-    public function index() {
+    public function showCategories() {
         $data = Category::all();
 
         return response()->json([
             'success' => true,
             'data' => $data
+        ]);
+    }
+
+    public function showByCategory(string $categorySlug) {
+        $categoryId = Category::where('slug', $categorySlug)->first()->id;
+        $product = Product::where('category_id', $categoryId)->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $product
         ]);
     }
 
