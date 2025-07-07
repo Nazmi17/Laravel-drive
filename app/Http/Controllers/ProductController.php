@@ -178,4 +178,97 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function update($productSlug, $categorySlug,Request $request) {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'description' => 'required|string',
+            'stock' => 'required|integer',
+            'image_url' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $categoryId = Category::where('slug', $categorySlug)->first()->id;
+            $product = Product::where('category_id', $categoryId)->where('slug', $productSlug)->first();
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Produk tidak ditemukan',
+                ], 404);
+            }
+
+            $client = $this->initializeGoogleClient();
+            $service = new Drive($client);
+            $newField = null;
+            $directURL = $product->image_url;
+
+            if ($request->hasFile('image_url')) {
+                preg_match('/id=([^&]+)/', $product->image_url, $matches);
+                $oldField = $matches[1]??null;
+
+                $imageFile = $request->file('image_url');
+                $fileName = time() . '.' . $imageFile->getClientOriginalName();
+
+                $fileMetaData = new DriveFile([
+                    'name' => $fileName,
+                    'parents' => ['1kC-9BNBR02b-zNnNqWLkqnett4p0Be47?usp=drive_link'],
+                ]);
+
+                $content = file_get_contents($imageFile->getRealPath());
+                $file = $service->files->create($fileMetaData, [
+                    'data' => $content,
+                    'mimeType' => $imageFile->getMimeType(),
+                    'uploadType' => 'multipart',
+                    'fields' => 'id',
+                    'supportsAllDrives' => true,
+                ]);
+
+                $newField = $file->id;
+
+                if (!$newField) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal upload file',
+                    ], 500);
+                }
+
+                if (!$this->makeFilePublic($newField)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal membuat file publik',
+                    ], 500);
+                }
+
+                if ($oldField) {
+                    try {
+                        $service->files->delete($oldField, ['supportsAllDrives' => true]);
+                    } catch (\Exception $e) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Gagal mengupdate gambar lama',
+                            'error' => $e->getMessage()
+                        ], 500);
+                    }
+                }
+
+                $directURL = 'https://drive.google.com/uc?id=' . $newField;
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat produk',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
