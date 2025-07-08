@@ -263,6 +263,26 @@ class ProductController extends Controller
 
                 $directURL = 'https://drive.google.com/uc?id=' . $newField;
             }
+
+            $slug = Str::slug($request->name ?? $product->name, '-');
+
+            if (Product::where('slug', $slug)->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Produk sudah ada',
+                ], 500);
+            }
+
+            $product->update([
+                'name' => $request->name ?? $product->name,
+                'price' => $request->price ?? $product->price,
+                'description' => $request->description ?? $product->description,
+                'stock' => $request->stock ?? $product->stock,
+                'image_url' => $directURL,
+                'slug' => $slug,
+                'category_id' => $categoryId
+            ]);
+            
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
