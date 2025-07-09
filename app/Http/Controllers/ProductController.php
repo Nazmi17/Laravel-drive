@@ -291,4 +291,48 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function destroy($categorySlug, $productSlug) {
+        try {
+            $categoryId = Category::where('slug', $categorySlug)->first()->id;
+            $product = Product::where('category_id', $categoryId)->where('slug', $productSlug)->first();
+
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Produk tidak ditemukan',
+                ], 404);
+            }
+
+            preg_match('/id=([^&]+)/', $product->image_url, $matches);
+            $field = $matches[1]??null;
+
+            if ($field) {
+                try {
+                    $client = $this->initializeGoogleClient();
+                    $service = new Drive($client);
+                    $service->files->delete($field, ['supportsAllDrives' => true]);
+                } catch (\Exception $e) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal menghapus gambar',
+                        'error' => $e->getMessage()
+                    ], 500);
+                }
+            }
+
+            $product->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Produk berhasil dihapus',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus produk',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
