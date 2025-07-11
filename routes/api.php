@@ -8,7 +8,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('/test', [ProductController::class, 'testMakePublic']);
+// Route::post('/test', [ProductController::class, 'testMakePublic']);
 
 Route::get('/categories', [ProductController::class, 'showCategories']);
 Route::get('/categories/{categorySlug}', [ProductController::class, 'showByCategory']);
