@@ -43,33 +43,6 @@ class ProductController extends Controller
         }
     }
 
-    //  public function testMakePublic(Request $request) {
-    //     $fileId = $request->input('file_id'); 
-
-    //     try {
-    //         $client = $this->initializeGoogleClient();
-    //         $service = new Drive($client);
-
-    //         $permission = new Permission();
-    //         $permission->setRole('reader');
-    //         $permission->setType('anyone');
-
-    //         $service->permissions->create($fileId, $permission);
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'File berhasil dibuat publik',
-    //             'url' => 'https://drive.google.com/uc?id=' . $fileId,
-    //         ]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Gagal membuat file publik',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
     public function showCategories() {
         $data = Category::all();
 
